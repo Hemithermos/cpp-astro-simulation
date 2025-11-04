@@ -1,5 +1,5 @@
-#ifndef SYSTEM_MANAGER_H
-#define SYSTEM_MANAGER_H
+#ifndef CORE_SYSTEM_MANAGER_H
+#define CORE_SYSTEM_MANAGER_H
 
 #include <memory>
 #include <unordered_map>

@@ -1,5 +1,5 @@
-#ifndef ENTITYMANAGER_H
-#define ENTITYMANAGER_H
+#ifndef CORE_ENTITY_MANAGER_H
+#define CORE_ENTITY_MANAGER_H
 
 #include <queue>
 #include <array>

@@ -1,5 +1,5 @@
-#ifndef COORDINATOR_H
-#define COORDINATOR_H
+#ifndef CORE_COORDINATOR_H
+#define CORE_COORDINATOR_H
 
 #include <memory>
 

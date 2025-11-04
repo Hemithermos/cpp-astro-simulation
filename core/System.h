@@ -1,5 +1,5 @@
-#ifndef SYSTEM_H
-#define SYSTEM_H
+#ifndef CORE_SYSTEM_H
+#define CORE_SYSTEM_H
 
 #include <set>
 #include "Entity.h"

@@ -1,5 +1,5 @@
-#ifndef ENTITY_H
-#define ENTITY_H
+#ifndef CORE_ENTITY_H
+#define CORE_ENTITY_H
 
 #include <cstdint>
 

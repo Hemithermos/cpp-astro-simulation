@@ -1,5 +1,5 @@
-#ifndef COMPONENTARRAY_H
-#define COMPONENTARRAY_H
+#ifndef CORE_COMPONENT_ARRAY_H
+#define CORE_COMPONENT_ARRAY_H
 
 #include <array>
 #include <unordered_map>
