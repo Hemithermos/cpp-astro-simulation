@@ -63,6 +63,11 @@
         "typeindex": "cpp",
         "typeinfo": "cpp",
         "valarray": "cpp",
-        "variant": "cpp"
-    }
+        "variant": "cpp",
+        "compare": "cpp",
+        "concepts": "cpp",
+        "numbers": "cpp",
+        "cassert": "cpp"
+    },
+    "C_Cpp.clang_format_fallbackStyle": "Visual Studio"
 }
