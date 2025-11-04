@@ -7,8 +7,8 @@
             "args": [
                 "-fdiagnostics-color=always",
                 "-g",
-                "/data/Documents/cppsimulation/*.cpp",
-                "/data/Documents/cppsimulation/glad/*.c",
+                "${workspaceFolder}/*.cpp",
+                "${workspaceFolder}/glad/*.c",  
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-ldl",
