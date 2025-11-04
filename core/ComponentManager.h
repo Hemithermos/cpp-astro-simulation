@@ -31,7 +31,7 @@ public:
 
     // un-associate the given component to the given entity and vice-versa
     template <typename T>
-    void removeComponent(Entity, T);
+    void removeComponent(Entity);
 
     // get the reference to the component of an entity
     template <typename T>

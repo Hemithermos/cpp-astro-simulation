@@ -55,7 +55,7 @@ void ComponentManager::addComponent(Entity entity, T component)
 }
 
 template <typename T>
-void ComponentManager::removeComponent(Entity entity, T component)
+void ComponentManager::removeComponent(Entity entity)
 {
     // unassociate a component from the good ComponentArray to an entity
     getComponentArray<T>()->removeData(entity);
