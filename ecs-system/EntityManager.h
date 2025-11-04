@@ -1,11 +1,14 @@
 #ifndef ENTITYMANAGER_H
 #define ENTITYMANAGER_H
 
-#include "Entity.h"
-#include "ComponentArray.h" 
 #include <queue>
 #include <array>
 #include <cassert>
+
+
+#include "Entity.h"
+#include "Component.h" 
+
 // distribute the entity ids, keep record of the used ids
 class EntityManager {
     public:
