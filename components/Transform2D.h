@@ -6,7 +6,7 @@
 // component handle displacements of/and positions in 2D
 struct Transform2D
 {
-    glm::vec2 position; // just a position
+    glm::vec2 position; // just a position in cartesian
 };
 
 #endif

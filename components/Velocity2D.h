@@ -5,7 +5,7 @@
 // contains data about velocity
 struct Velocity2D
 {
-    glm::vec2 velocity;
+    glm::vec2 velocity; // in cartesian
 };
 
 #endif
