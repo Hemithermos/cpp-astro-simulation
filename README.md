@@ -1,3 +1,5 @@
+This project is heavily inspired by the great work of Kavan in his video : https://www.youtube.com/watch?v=8-B6ryuBkCM&t=96s
+
 ## 1 - switch to ECS
 In progress
 
