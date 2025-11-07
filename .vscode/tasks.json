@@ -8,7 +8,7 @@
                 "-fdiagnostics-color=always",
                 "-g",
                 "${workspaceFolder}/*.cpp",
-                "${workspaceFolder}/glad/*.c",  
+                "${workspaceFolder}/glad.c",  
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",
                 "-ldl",
