@@ -69,5 +69,8 @@
         "numbers": "cpp",
         "cassert": "cpp"
     },
-    "C_Cpp.clang_format_fallbackStyle": "Visual Studio"
+    "C_Cpp.clang_format_fallbackStyle": "Visual Studio",
+    "files.watcherExclude": {
+        "**/target": true
+    }
 }
