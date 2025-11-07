@@ -9,7 +9,7 @@ class Ray : Object {
         std::vector<vec2> trail;
         Ray(vec2 pos, vec2 spd) : speed(spd), Object(pos) {}; 
         void draw() override;
-        void step(double dt);
+        void step(float dt);
 
 
 };

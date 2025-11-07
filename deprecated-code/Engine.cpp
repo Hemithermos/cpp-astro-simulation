@@ -25,7 +25,7 @@ class Engine {
         int HEIGHT = 600;
         float width = 1e11f; // Width of the viewport in meters
         float height = 7.5e10f;
-        double dt = 1.0;
+        float dt = 1.0;
         static Engine& getInstance() {
             static Engine instance;
             return instance;
@@ -40,10 +40,10 @@ class Engine {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glMatrixMode(GL_PROJECTION);
         glLoadIdentity();
-        double left   = -width;
-        double right  =  width;
-        double bottom = -height;
-        double top    =  height;
+        float left   = -width;
+        float right  =  width;
+        float bottom = -height;
+        float top    =  height;
         glOrtho(left, right, bottom, top, -1.0, 1.0);
         glMatrixMode(GL_MODELVIEW);
         glLoadIdentity();

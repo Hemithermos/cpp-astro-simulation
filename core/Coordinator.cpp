@@ -70,7 +70,15 @@ template<typename T> ComponentType Coordinator::getComponentType()
     return componentManager->getComponentType<T>();
 }
 
+template <typename T>
+bool Coordinator::hasComponent(Entity)
+{
+    Signature signature = entityManager->getSignature(entity);
 
+    ComponentType componentType = getComponentType<T>();
+
+    return (signature[componentType] == true);
+}
 
 // system methods
 

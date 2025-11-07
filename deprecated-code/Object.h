@@ -6,8 +6,8 @@
 
 using namespace glm;
 
-static const double C = 299792458.0;
-static const double G = 6.67430e-11;
+static const float C = 299792458.0;
+static const float G = 6.67430e-11;
 
 class Object {
     private:

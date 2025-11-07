@@ -27,6 +27,7 @@ public:
     template<typename T> void removeComponent(Entity);           // unassociate entity from component
     template<typename T> T& getComponent(Entity);                // get the entity's component location
     template<typename T> ComponentType getComponentType();       // get type T's component type
+    template<typename T> bool hasComponent(Entity);              // test if an entity has the T component
 
     // System methods
     template<typename T> std::shared_ptr<T> registerSystem();    // register system

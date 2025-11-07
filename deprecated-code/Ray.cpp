@@ -33,7 +33,7 @@ void Ray::draw()
 
 }
 
-void Ray::step(double dt)
+void Ray::step(float dt)
 {   
 
     // basic euler, change to RK4
