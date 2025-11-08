@@ -50,7 +50,6 @@ int main()
     const char* vpath = "shaders/vertexShader.glsl";
     const char* fpath = "shaders/fragmentShader.glsl";
     Shader ourShader(vpath, fpath);
-
     // dont uncomment if no uniform
     // ourShader.setFloat("SomeUniform", 1.0f);
 
