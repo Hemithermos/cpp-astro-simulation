@@ -27,6 +27,7 @@ void processInput(GLFWwindow *window)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+    
 }
 
 VAOinfo createVAO(float* array, size_t arraySize,
@@ -39,12 +40,12 @@ VAOinfo createVAO(float* array, size_t arraySize,
     glBindVertexArray(info.VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, info.VBO); // copy our vertices array in a buffer for OpenGL
-    glBufferData(GL_ARRAY_BUFFER, arraySize, array, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, arraySize, array, GL_DYNAMIC_DRAW);
 
     glVertexAttribPointer(locV, sizeV, typeV, normalizeV, strideV, offsetV);
-    glEnableVertexAttribArray(locV);
     glVertexAttribPointer(locF, sizeF, typeF, normalizeF, strideF, offsetF);
     glEnableVertexAttribArray(locF);
+    glEnableVertexAttribArray(locV);
 
 
     // call to vertexAttribPointer binded VBO as the vertex buffer object so we can clear the Buffer Array
@@ -81,7 +82,7 @@ int main()
         exit(EXIT_FAILURE);
     }
 
-    glViewport(0,0, WIDTH, HEIGHT);
+    glViewport(0, 0, WIDTH, HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
     
     const char* vpath = "shaders/vertexShader.glsl";
@@ -107,9 +108,9 @@ int main()
     // glEnableVertexAttribArray(0);
 
     float vertices[] = {
-        -0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // top , red
-        0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom left, green
-        0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f // bottom right, blue
+         0.0f,  0.866, 0.0f, 1.0f, 0.0f, 0.0f,  // top , red
+        -0.5f, -0.433f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom left, green
+         0.5f, -0.433f, 0.0f, 0.0f, 0.0f, 1.0f // bottom right, blue
     };
 
 
@@ -122,23 +123,30 @@ int main()
 
     VAOinfo vaovbo = createVAO(vertices, sizeof(vertices),
                             0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) 0,
-                            1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)( 3*sizeof(float)));
+                            1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
 
 
 
+    glClearColor(0.2f,0.2f,0.2f, 1.0f);
 
 
     while(!glfwWindowShouldClose(window))
     {
-        glClearColor(0.2f,0.2f,0.2f, 1.0f);
+        
+        glClear(GL_COLOR_BUFFER_BIT);
         processInput(window);
         ourShader.use();
+            
 
 
-        double time = glfwGetTime();
-        float angle = M_PI * sin(time / 2.0f);
+        float time;
         glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::rotate(trans, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+        float angle = glm::radians(50.0f);
+
+        time  = glfwGetTime();
+        angle = glm::radians(50.0f * time);
+
+        trans = glm::rotate(trans, angle , glm::vec3(0.0f, 0.0f, 1.0f));
         ourShader.setTransform("transform", trans);
 
 
@@ -146,7 +154,7 @@ int main()
         glBindVertexArray(vaovbo.VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         // unbind the first VAO and bind the second, use the second shader
-
+        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
