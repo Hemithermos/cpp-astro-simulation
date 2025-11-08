@@ -71,7 +71,7 @@ template<typename T> ComponentType Coordinator::getComponentType()
 }
 
 template <typename T>
-bool Coordinator::hasComponent(Entity)
+bool Coordinator::hasComponent(Entity entity)
 {
     Signature signature = entityManager->getSignature(entity);
 

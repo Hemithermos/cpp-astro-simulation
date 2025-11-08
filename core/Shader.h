@@ -14,7 +14,7 @@ public:
     unsigned int ID;
 
     // constructor to read the shaders
-    Shader(const char *vertexShaderPath, const char *fragShaderPath);
+    Shader(const char*, const char*);
     // activate the shader using glUseProgram
     void use();
     // utils uniform functions

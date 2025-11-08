@@ -7,7 +7,7 @@ std::shared_ptr<ComponentArray<T>> ComponentManager::getComponentArray()
     const char *typeName = typeid(T).name();
 
     // make sure we are getting a registered component's array
-    assert(mapTypeNameToComponentType(typeName) != mapTypeNameToComponentType.end() && "Component not registered. Can't get its ComponentArray");
+    assert(mapTypeNameToComponentArray.find(typeName) != mapTypeNameToComponentArray.end() && "Component not registered. Can't get its ComponentArray");
 
     // return a shared pointer to the component array
     return std::static_pointer_cast<ComponentArray<T>>(mapTypeNameToComponentArray[typeName]);
@@ -27,7 +27,7 @@ void ComponentManager::registerComponent()
     mapTypeNameToComponentType.insert({typeName, nextComponentType});
 
     // create a ComponentArray of type T pointer and add it to the ComponentArray map
-    mapComponentTypeToComponentArray.insert({typename, std::make_shared<ComponentArray<T>>()});
+    mapTypeNameToComponentArray.insert({typeName, std::make_shared<ComponentArray<T>>()});
 
     // increment the next valid component id
     nextComponentType++;

@@ -1,5 +1,5 @@
 #include "SystemManager.h"
-
+#include <cassert>
 template <typename T>
 std::shared_ptr<T> SystemManager::registerSystem()
 {
@@ -10,7 +10,7 @@ std::shared_ptr<T> SystemManager::registerSystem()
 
     auto system = std::make_shared<T>();
     systems.insert({typeName, system});
-    return system
+    return system;
 }
 
 template <typename T>
@@ -21,7 +21,7 @@ void SystemManager::setSignature(Signature signature)
 
     assert(systems.find(typeName) != systems.end() && "Can't find the signature of an unregistered system.");
 
-    signatures.insert({typename, signature});
+    signatures.insert({typeName, signature});
 }
 
 void SystemManager::entityDestroyed(Entity entity)

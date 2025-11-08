@@ -5,7 +5,7 @@ void ComponentArray<T>::insertData(Entity entity, T component)
 {
     // make sure the entity to component mapping is injective
     //      eg : entity can't be mapped to two identical component
-    assert(mapComponentToEntity == mapEntityToComponent && "Component added to the same entity more than once");
+    assert(mapComponentToEntity.find(entity) == mapComponentToEntity.end() && "Component added to the same entity more than once");
 
     // put a new entry at the end and update the maps
     size_t indexComponent = validComponentNumber;  // next after last valid
