@@ -4,8 +4,14 @@
 #include "GLFW/glfw3.h"
 #include "core/Shader.h"
 #include <cmath>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #define WIDTH 800
 #define HEIGHT 600
+
+
 
 struct VAOinfo {
     unsigned int VAO;
@@ -118,11 +124,23 @@ int main()
                             0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) 0,
                             1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)( 3*sizeof(float)));
 
+
+
+
+
     while(!glfwWindowShouldClose(window))
     {
         glClearColor(0.2f,0.2f,0.2f, 1.0f);
         processInput(window);
         ourShader.use();
+
+
+        double time = glfwGetTime();
+        float angle = M_PI * sin(time / 2.0f);
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::rotate(trans, angle, glm::vec3(0.0f, 0.0f, 1.0f));
+        ourShader.setTransform("transform", trans);
+
 
         // render 1st triangle
         glBindVertexArray(vaovbo.VAO);
