@@ -8,7 +8,7 @@ Built the ECS library from scratch from the website : <hlink>https://austinmorla
 
 ## 2 - implement physics
 
-Not yet
+Lensing in 2D is physically implemented using the Schwartzschild metric and the null geodesic.
 
 ## 3 - enjoy 3d shenanigans
 
