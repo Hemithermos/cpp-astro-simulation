@@ -1,3 +1,4 @@
+
 #include <iostream>
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
@@ -5,6 +6,11 @@
 #include <cmath>
 #define WIDTH 800
 #define HEIGHT 600
+
+struct VAOinfo {
+    unsigned int VAO;
+    unsigned int VBO;
+};
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -15,6 +21,31 @@ void processInput(GLFWwindow *window)
 {
     if(glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+}
+
+VAOinfo createVAO(float* array, size_t arraySize,
+                        GLuint locV, GLint sizeV, GLenum typeV, GLboolean normalizeV, GLsizei strideV, void* offsetV,
+                        GLuint locF, GLint sizeF, GLenum typeF, GLboolean normalizeF, GLsizei strideF, void* offsetF)
+{
+    VAOinfo info;
+    glGenVertexArrays(1, &info.VAO);
+    glGenBuffers(1, &info.VBO);
+    glBindVertexArray(info.VAO);
+
+    glBindBuffer(GL_ARRAY_BUFFER, info.VBO); // copy our vertices array in a buffer for OpenGL
+    glBufferData(GL_ARRAY_BUFFER, arraySize, array, GL_STATIC_DRAW);
+
+    glVertexAttribPointer(locV, sizeV, typeV, normalizeV, strideV, offsetV);
+    glEnableVertexAttribArray(locV);
+    glVertexAttribPointer(locF, sizeF, typeF, normalizeF, strideF, offsetF);
+    glEnableVertexAttribArray(locF);
+
+
+    // call to vertexAttribPointer binded VBO as the vertex buffer object so we can clear the Buffer Array
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0); // unbind the VAO 
+
+    return info;
 }
 
 int main()
@@ -69,7 +100,7 @@ int main()
     // 6-> type void* c'est l'offset du début dans l'array
     // glEnableVertexAttribArray(0);
 
-    float vertices1[] = {
+    float vertices[] = {
         -0.5f,  -0.5f, 0.0f, 1.0f, 0.0f, 0.0f,  // top , red
         0.5f, -0.5f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom left, green
         0.0f, 0.5f, 0.0f, 0.0f, 0.0f, 1.0f // bottom right, blue
@@ -81,33 +112,20 @@ int main()
     // VAO = vertex array object, points to a vertex array and strides along the data to retrieve the good vertices
 
     // create and bind vao and vbo
-    unsigned int VAO1, VBO1;
-    glGenVertexArrays(1, &VAO1);
-    glGenBuffers(1, &VBO1);
-    glBindVertexArray(VAO1);
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO1); // copy our vertices array in a buffer for OpenGL
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices1), vertices1, GL_STATIC_DRAW);
-
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) 0); // set the vertex attribute pointer
-    glEnableVertexAttribArray(0);
-
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) (3*sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    // call to vertexAttribPointer binded VBO as the vertex buffer object so we can clear the Buffer Array
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0); // unbind the VAO 
 
 
+    VAOinfo vaovbo = createVAO(vertices, sizeof(vertices),
+                            0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) 0,
+                            1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)( 3*sizeof(float)));
 
     while(!glfwWindowShouldClose(window))
     {
+        glClearColor(0.2f,0.2f,0.2f, 1.0f);
         processInput(window);
         ourShader.use();
 
         // render 1st triangle
-        glBindVertexArray(VAO1);
+        glBindVertexArray(vaovbo.VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
         // unbind the first VAO and bind the second, use the second shader
 
@@ -117,10 +135,12 @@ int main()
     }
 
 
-    glDeleteVertexArrays(1, &VAO1);
-    glDeleteBuffers(1, &VBO1);
+    glDeleteVertexArrays(1, &vaovbo.VAO);
+    glDeleteBuffers(1, &vaovbo.VBO);
 
 
     glfwTerminate();
     return 0;
 }
+
+
