@@ -2,21 +2,30 @@
 #include <iostream>
 #include <glad/glad.h>
 #include "GLFW/glfw3.h"
-#include "core/Shader.h"
 #include <cmath>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+
+#include "components/Spherical.h"
+#include "components/Transform2D.h"
+#include "components/Color.h"
+
+
+#include "systems/RenderSpheresSystem.h"
+#include "core/Shader.h"
+#include "core/Coordinator.h"
+
 #define WIDTH 800
 #define HEIGHT 600
 
+// Global coordinator instance referenced by systems via `extern Coordinator coordinator;`
+Coordinator coordinator;
 
 
-struct VAOinfo {
-    unsigned int VAO;
-    unsigned int VBO;
-};
+
+
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -30,30 +39,7 @@ void processInput(GLFWwindow *window)
     
 }
 
-VAOinfo createVAO(float* array, size_t arraySize,
-                        GLuint locV, GLint sizeV, GLenum typeV, GLboolean normalizeV, GLsizei strideV, void* offsetV,
-                        GLuint locF, GLint sizeF, GLenum typeF, GLboolean normalizeF, GLsizei strideF, void* offsetF)
-{
-    VAOinfo info;
-    glGenVertexArrays(1, &info.VAO);
-    glGenBuffers(1, &info.VBO);
-    glBindVertexArray(info.VAO);
 
-    glBindBuffer(GL_ARRAY_BUFFER, info.VBO); // copy our vertices array in a buffer for OpenGL
-    glBufferData(GL_ARRAY_BUFFER, arraySize, array, GL_DYNAMIC_DRAW);
-
-    glVertexAttribPointer(locV, sizeV, typeV, normalizeV, strideV, offsetV);
-    glVertexAttribPointer(locF, sizeF, typeF, normalizeF, strideF, offsetF);
-    glEnableVertexAttribArray(locF);
-    glEnableVertexAttribArray(locV);
-
-
-    // call to vertexAttribPointer binded VBO as the vertex buffer object so we can clear the Buffer Array
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0); // unbind the VAO 
-
-    return info;
-}
 
 int main()
 {
@@ -107,11 +93,29 @@ int main()
     // 6-> type void* c'est l'offset du début dans l'array
     // glEnableVertexAttribArray(0);
 
-    float vertices[] = {
-         0.0f,  0.866, 0.0f, 1.0f, 0.0f, 0.0f,  // top , red
-        -0.5f, -0.433f, 0.0f, 0.0f, 1.0f, 0.0f,  // bottom left, green
-         0.5f, -0.433f, 0.0f, 0.0f, 0.0f, 1.0f // bottom right, blue
-    };
+    
+    
+    coordinator.init();
+
+    coordinator.registerComponent<Spherical>();
+    coordinator.registerComponent<Color>();
+    coordinator.registerComponent<Transform2D>();
+
+
+    auto sphereSys = coordinator.registerSystem<RenderSpheresSystem>();
+    {
+        Signature signature;
+        signature.set(coordinator.getComponentType<Transform2D>());
+        signature.set(coordinator.getComponentType<Spherical>());
+        coordinator.setSystemSignature<RenderSpheresSystem>(signature);
+    }
+    sphereSys->setShader(std::make_shared<Shader>(ourShader));
+
+    Entity entity = coordinator.createEntity();
+    coordinator.addComponent<Transform2D>(entity, {glm::vec2(0.0f, 0.0f)});
+    coordinator.addComponent<Spherical>(entity, {1.0f});
+    coordinator.addComponent<Color>(entity, {glm::vec4(1.0f, 0.2f, 0.2f, 1.0f)});
+
 
 
 
@@ -119,12 +123,6 @@ int main()
     // VAO = vertex array object, points to a vertex array and strides along the data to retrieve the good vertices
 
     // create and bind vao and vbo
-
-
-    VAOinfo vaovbo = createVAO(vertices, sizeof(vertices),
-                            0, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*) 0,
-                            1, 3, GL_FLOAT, GL_FALSE, 6*sizeof(float), (void*)(3*sizeof(float)));
-
 
 
     glClearColor(0.2f,0.2f,0.2f, 1.0f);
@@ -135,34 +133,15 @@ int main()
         
         glClear(GL_COLOR_BUFFER_BIT);
         processInput(window);
-        ourShader.use();
-            
+
+        sphereSys->renderCircle();
 
 
-        float time;
-        glm::mat4 trans = glm::mat4(1.0f);
-        float angle = glm::radians(50.0f);
-
-        time  = glfwGetTime();
-        angle = glm::radians(50.0f * time);
-
-        trans = glm::rotate(trans, angle , glm::vec3(0.0f, 0.0f, 1.0f));
-        ourShader.setTransform("transform", trans);
-
-
-        // render 1st triangle
-        glBindVertexArray(vaovbo.VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-        // unbind the first VAO and bind the second, use the second shader
-        glBindVertexArray(0);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
 
-
-    glDeleteVertexArrays(1, &vaovbo.VAO);
-    glDeleteBuffers(1, &vaovbo.VBO);
 
 
     glfwTerminate();

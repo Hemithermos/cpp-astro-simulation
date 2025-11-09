@@ -1,5 +1,5 @@
-#ifndef SHADER_H
-#define SHADER_H
+#ifndef CORE_SHADER_H
+#define CORE_SHADER_H
 
 #include <glad/glad.h>
 #include <string>
@@ -7,6 +7,13 @@
 #include <sstream>
 #include <iostream>
 #include <glm/glm.hpp>
+
+struct VAOinfo {
+    GLuint VAO;
+    GLuint VBO;
+};
+
+
 class Shader
 {
 public:
@@ -22,6 +29,10 @@ public:
     void setInt(const std::string &name, int value) const;
     void setFloat(const std::string &name, float value) const;
     void setTransform(const std::string &name, glm::mat4 value) const;
+    void setVec4(const std::string &name, glm::vec4 value) const;
+
+
+
 };
 
 #endif

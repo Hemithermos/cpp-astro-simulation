@@ -1,28 +1,4 @@
 #include "SystemManager.h"
-#include <cassert>
-template <typename T>
-std::shared_ptr<T> SystemManager::registerSystem()
-{
-
-    // cf ComponentManager.cpp for the logic
-    const char *typeName = typeid(T).name();
-    assert(systems.find(typeName) == systems.end() && "Can't register the same System twice.");
-
-    auto system = std::make_shared<T>();
-    systems.insert({typeName, system});
-    return system;
-}
-
-template <typename T>
-void SystemManager::setSignature(Signature signature)
-{
-    // cf ComponentManager.cpp for the logic
-    const char *typeName = typeid(T).name();
-
-    assert(systems.find(typeName) != systems.end() && "Can't find the signature of an unregistered system.");
-
-    signatures.insert({typeName, signature});
-}
 
 void SystemManager::entityDestroyed(Entity entity)
 {
@@ -61,3 +37,4 @@ void SystemManager::entitySignatureChanged(Entity entity, Signature signature)
         }
     }
 }
+

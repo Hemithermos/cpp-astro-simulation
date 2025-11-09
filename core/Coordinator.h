@@ -8,7 +8,8 @@
 #include "ComponentManager.h"
 #include "SystemManager.h"
 
-
+// Avoid including concrete component/system headers here to prevent circular
+// includes. Templates are defined below and will be instantiated where needed.
 // this class makes sure the system, component and entity manager talk to each other
 
 class Coordinator
@@ -41,5 +42,68 @@ private:
     std::unique_ptr<SystemManager> systemManager;
 
 };
+
+// Template implementations for Coordinator (inside include guard)
+template<typename T>
+void Coordinator::registerComponent()
+{
+    componentManager->registerComponent<T>();
+}
+
+template<typename T>
+void Coordinator::addComponent(Entity entity, T component)
+{
+    componentManager->addComponent(entity, component);
+
+    auto signature = entityManager->getSignature(entity);
+    signature.set(componentManager->getComponentType<T>(), true);
+    entityManager->setSignature(entity, signature);
+
+    systemManager->entitySignatureChanged(entity, signature);
+}
+
+template<typename T>
+void Coordinator::removeComponent(Entity entity)
+{
+    componentManager->removeComponent<T>(entity);
+
+    auto signature = entityManager->getSignature(entity);
+    signature.set(componentManager->getComponentType<T>(), false);
+    entityManager->setSignature(entity, signature);
+
+    systemManager->entitySignatureChanged(entity, signature);
+}
+
+template<typename T>
+T& Coordinator::getComponent(Entity entity)
+{
+    return componentManager->getComponent<T>(entity);
+}
+
+template<typename T>
+ComponentType Coordinator::getComponentType()
+{
+    return componentManager->getComponentType<T>();
+}
+
+template <typename T>
+bool Coordinator::hasComponent(Entity entity)
+{
+    Signature signature = entityManager->getSignature(entity);
+    ComponentType componentType = getComponentType<T>();
+    return (signature[componentType] == true);
+}
+
+template <typename T>
+std::shared_ptr<T> Coordinator::registerSystem()
+{
+    return systemManager->registerSystem<T>();
+}
+
+template <typename T>
+void Coordinator::setSystemSignature(Signature signature)
+{
+    systemManager->setSignature<T>(signature);
+}
 
 #endif

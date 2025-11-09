@@ -9,6 +9,7 @@
                 "-g",
                 "${workspaceFolder}/*.cpp",
                 "${workspaceFolder}/core/*.cpp",
+                "${workspaceFolder}/systems/RenderSpheresSystem.cpp",
                 "${workspaceFolder}/glad.c",  
                 "-o",
                 "${fileDirname}/${fileBasenameNoExtension}",

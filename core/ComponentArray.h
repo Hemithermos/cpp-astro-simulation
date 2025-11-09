@@ -63,3 +63,46 @@ private:
 };
 
 #endif
+
+// Template implementations for ComponentArray moved into header
+template <class T>
+void ComponentArray<T>::insertData(Entity entity, T component)
+{
+    assert(mapComponentToEntity.find(entity) == mapComponentToEntity.end() && "Component added to the same entity more than once");
+    size_t indexComponent = validComponentNumber; // next after last valid
+    mapEntityToComponent[entity] = indexComponent;
+    mapComponentToEntity[indexComponent] = entity;
+    componentArray[indexComponent] = component;
+    validComponentNumber++;
+}
+
+template <class T>
+void ComponentArray<T>::removeData(Entity entity)
+{
+    assert(mapEntityToComponent.find(entity) != mapEntityToComponent.end() && "Component doesnt exist and therefore can't be removed.");
+    size_t indexOfRemovedEntity = mapEntityToComponent[entity];
+    size_t indexOfLastElement = validComponentNumber - 1;
+    componentArray[indexOfRemovedEntity] = componentArray[indexOfLastElement];
+    Entity entityOfLastElement = mapComponentToEntity[indexOfLastElement];
+    mapEntityToComponent[entityOfLastElement] = indexOfRemovedEntity;
+    mapComponentToEntity[indexOfRemovedEntity] = entityOfLastElement;
+    mapEntityToComponent.erase(entity);
+    mapComponentToEntity.erase(indexOfLastElement);
+    validComponentNumber--;
+}
+
+template <class T>
+T &ComponentArray<T>::getData(Entity entity)
+{
+    assert(mapEntityToComponent.find(entity) != mapEntityToComponent.end() && "Component doesnt exist and therefore can't be accessed.");
+    return componentArray[mapEntityToComponent[entity]];
+}
+
+template <class T>
+void ComponentArray<T>::entityDestroyed(Entity entity)
+{
+    if (mapEntityToComponent.find(entity) != mapEntityToComponent.end())
+    {
+        removeData(entity);
+    }
+}

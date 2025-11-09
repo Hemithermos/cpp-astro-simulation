@@ -4,13 +4,13 @@
 #include "glm/glm.hpp"
 
 
-#include "core/System.h"
-#include "core/Coordinator.h"
-#include "components/GravityWell.h"
-#include "components/Projectile.h"
-#include "components/Transform2D.h"
-#include "components/Velocity2D.h"
-
+#include "../core/System.h"
+#include "../core/Coordinator.h"
+#include "../components/GravityWell.h"
+#include "../components/Projectile.h"
+#include "../components/Transform2D.h"
+#include "../components/Velocity2D.h"
+class Coordinator;
 extern Coordinator coordinator;
 #define c2 299792458*299792458.0f
 

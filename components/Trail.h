@@ -1,11 +1,11 @@
-#ifndef COMPONENTS_RAY_H
-#define COMPONENTS_RAY_H
+#ifndef COMPONENTS_TRAIL_H
+#define COMPONENTS_TRAIL_H
 
 #include <vector>
 #include <glm/glm.hpp>
 
 
-struct HasTrail {
+struct Trail {
     std::vector<glm::vec2> trail;
 };
 

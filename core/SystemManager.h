@@ -4,6 +4,9 @@
 #include <memory>
 #include <unordered_map>
 
+#include <typeinfo>
+#include <cassert>
+
 #include "System.h"
 #include "Component.h"
 
@@ -34,3 +37,22 @@ private:
 };
 
 #endif
+
+// Template implementations for SystemManager
+template <typename T>
+std::shared_ptr<T> SystemManager::registerSystem()
+{
+    const char *typeName = typeid(T).name();
+    assert(systems.find(typeName) == systems.end() && "Can't register the same System twice.");
+    auto system = std::make_shared<T>();
+    systems.insert({typeName, system});
+    return system;
+}
+
+template <typename T>
+void SystemManager::setSignature(Signature signature)
+{
+    const char *typeName = typeid(T).name();
+    assert(systems.find(typeName) != systems.end() && "Can't find the signature of an unregistered system.");
+    signatures.insert({typeName, signature});
+}
