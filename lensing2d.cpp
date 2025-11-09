@@ -29,16 +29,27 @@
 // Global coordinator instance referenced by systems via `extern Coordinator coordinator;`
 Coordinator coordinator;
 
+
+
+
+bool isPaused = true;
+
 void framebuffer_size_callback(GLFWwindow *window, int width, int height)
 {
     glViewport(0, 0, width, height);
 }
 
-void processInput(GLFWwindow *window)
+static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        isPaused = !isPaused;
+        std::cout << (isPaused ? "Paused\n" : "Resumed\n");
+    }
+    if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, true);
+    }
 }
+
 
 int main()
 {
@@ -68,7 +79,7 @@ int main()
 
     glViewport(0, 0, WIDTH, HEIGHT);
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-
+    glfwSetKeyCallback(window, key_callback);
     const char *vpath = "shaders/vertexShader.glsl";
     const char *fpath = "shaders/fragmentShader.glsl";
     auto sharedShader = std::make_shared<Shader>(vpath, fpath);
@@ -131,10 +142,6 @@ int main()
         coordinator.setSystemSignature<LensingSystem>(lsign);
     }
 
-    int fbw, fbh;
-    glfwGetFramebufferSize(window, &fbw, &fbh);
-    float aspect = (fbh > 0) ? float(fbw) / float(fbh) : 1.0f;
-
     const float halfWorldX = ww;                  // meters to show in +X and -X
     const float halfWorldY = hw; // match scale so circles stay round
 
@@ -154,7 +161,7 @@ int main()
 
     glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-    const int rayCount = 11;         // choose what you like
+    const int rayCount = 100;         // choose what you like
     const float xLeft = -2*halfWorldX; // left edge in world meters
     const float yBottom = -2*halfWorldY;
     const float yTop = 2*halfWorldY;
@@ -176,21 +183,42 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT);
+        // 1) Desired aspect (keep constant)
+        const float desiredAspect = 4.0f / 3.0f; // or whatever you want to lock
+
+        // 2) Framebuffer size
         int fbw, fbh;
         glfwGetFramebufferSize(window, &fbw, &fbh);
-        float aspect = (fbh > 0) ? float(fbw) / float(fbh) : 1.0f;
+        float fbAspect = (fbh > 0) ? float(fbw) / float(fbh) : desiredAspect;
 
-        const float halfWorldX = ww;
-        const float halfWorldY = halfWorldX / aspect;
+        // 3) Compute centered viewport with desiredAspect
+        int vpX = 0, vpY = 0, vpW = fbw, vpH = fbh;
+        if (fbAspect > desiredAspect) {
+            // too wide → pillarbox left/right
+            vpW = int(fbh * desiredAspect + 0.5f);
+            vpX = (fbw - vpW) / 2;
+        } else if (fbAspect < desiredAspect) {
+            // too tall → letterbox top/bottom
+            vpH = int(fbw / desiredAspect + 0.5f);
+            vpY = (fbh - vpH) / 2;
+        }
+        glViewport(vpX, vpY, vpW, vpH);
 
+        // 4) Build worldTransform from the viewport aspect (which is fixed)
+        const float halfWorldX = ww;                 // keep horizontal meters fixed
+        const float halfWorldY = halfWorldX / desiredAspect;
         const float sx = 1.0f / (2.0f * halfWorldX);
         const float sy = 1.0f / (2.0f * halfWorldY);
         glm::mat4 world = glm::scale(glm::mat4(1.0f), glm::vec3(sx, sy, 1.0f));
         sharedShader->use();
         sharedShader->setTransform("worldTransform", world);
 
-        processInput(window);
-        lensSys->update(1.0f);
+
+
+        if(!isPaused)
+        {
+            lensSys->update(1.0f);
+        }
         sphereSys->renderCircle(/*numPoints*/); // no per-system aspect scaling
         trailSys->renderTrails();
         glfwSwapBuffers(window);
