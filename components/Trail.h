@@ -6,7 +6,7 @@
 
 
 struct Trail {
-    std::vector<glm::vec2> trail;
+    std::vector<glm::vec3> trail;
 };
 
 #endif

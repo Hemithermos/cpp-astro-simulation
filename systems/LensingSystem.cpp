@@ -154,7 +154,8 @@ void LensingSystem::update(float dt) {
         }
 
         // Update trail
-        trail.trail.push_back(rayPosition.position);
+        glm::vec3 poss = glm::vec3(rayPosition.position, 0.0f);
+        trail.trail.push_back(poss);
         if (trail.trail.size() > 200) trail.trail.erase(trail.trail.begin(), trail.trail.begin() + (trail.trail.size() - 200));
     }
 }

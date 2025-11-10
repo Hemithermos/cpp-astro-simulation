@@ -30,13 +30,26 @@
 Coordinator coordinator;
 
 
-
+glm::mat4 projection;
 
 bool isPaused = true;
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height)
-{
+void framebuffer_size_callback(GLFWwindow* window, int width, int height) {
     glViewport(0, 0, width, height);
+
+    float windowAspect = (float)width / (float)height;
+    float worldAspect = ww / hw;
+
+    if (windowAspect > worldAspect) {
+        // Window is wider than world -> expand world width
+        float newW = hw * windowAspect;
+        projection = glm::ortho(-newW, newW, -hw, hw, -1.0f, 1.0f);
+    } else {
+        // Window is taller than world -> expand world height
+        float newH = ww / windowAspect;
+        projection = glm::ortho(-ww, ww, -newH, newH, -1.0f, 1.0f);
+    }
+
 }
 
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -83,24 +96,20 @@ int main()
     const char *vpath = "shaders/vertexShader.glsl";
     const char *fpath = "shaders/fragmentShader.glsl";
     auto sharedShader = std::make_shared<Shader>(vpath, fpath);
-    // dont uncomment if no uniform
-    // ourShader.setFloat("SomeUniform", 1.0f);
+    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
 
-    // we tell OpenGL how to interpret the vertices we feed him
-    // we have
-    //        Vertex 1      Vertex 2      Vertex 3
-    //       x   y   z    x    y    z    x    y   z
-    // octet 0  4   8   12   16   20   24   28  32   36   => taille d'un vertex : 3 * sizeof(float) = 12
-    // glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GL_FLOAT), (void*) 0);
+    // 4) Create proper orthographic projection that matches our world coordinates
+    float left =   - ww;    // Left edge of world
+    float right =  + ww;   // Right edge of world
+    float bottom = - hw; // Bottom edge of world
+    float top =    + hw;     // Top edge of world
 
-    // 1->  location = 0 so start = 0
-    // 2->  vec3 so 3 value
-    // 3-> type of data : gl_float
-    // 4-> bool, true if we want to normalize the given data
-    // 5-> stride entre les attributs
-    // 6-> type void* c'est l'offset du début dans l'array
-    // glEnableVertexAttribArray(0);
+    // Orthographic projection matrix
+    projection = glm::ortho(left, right, bottom, top, -1.0f, 1.0f);
 
+
+
+    // Coordinator of ECS
     coordinator.init();
 
     coordinator.registerComponent<Spherical>();
@@ -131,7 +140,6 @@ int main()
         signature.set(coordinator.getComponentType<Color>());
         coordinator.setSystemSignature<RenderTrailSystem>(signature);
     }
-    trailSys->init();
     trailSys->setShader(sharedShader);
 
     // register lensing physical system and set its signature (entities with Transform2D)
@@ -142,8 +150,7 @@ int main()
         coordinator.setSystemSignature<LensingSystem>(lsign);
     }
 
-    const float halfWorldX = ww;                  // meters to show in +X and -X
-    const float halfWorldY = hw; // match scale so circles stay round
+
 
     Entity blackHole = coordinator.createEntity();
     coordinator.addComponent<Transform2D>(blackHole, {glm::vec2(0.0f, 0.0f)});
@@ -152,26 +159,15 @@ int main()
     coordinator.addComponent<Color>(blackHole, {glm::vec4(1.0f, 0.2f, 0.2f, 1.0f)});
     coordinator.addComponent<GravityWell>(blackHole, {8.54e36f, rs});
 
-    // for(int i = 0 ; i <= 11 ; i++)
 
-    // thats kinda boring for only ONE (UNO 1) object
-    // VAO = vertex array object, points to a vertex array and strides along the data to retrieve the good vertices
-
-    // create and bind vao and vbo
-
-    glClearColor(0.2f, 0.2f, 0.2f, 1.0f);
-
-    const int rayCount = 100;         // choose what you like
-    const float xLeft = -2*halfWorldX; // left edge in world meters
-    const float yBottom = -2*halfWorldY;
-    const float yTop = 2*halfWorldY;
-    const float yStep = (rayCount > 1) ? (yTop - yBottom) / float(rayCount - 1) : 0.0f;
+    int rayCount = 100;
+    const float yStep = (rayCount > 1) ? (top - bottom) / float(rayCount - 1) : 0.0f;
 
     for (int i = 0; i < rayCount; ++i)
     {
-        float y = yBottom + i * yStep; // evenly spaced across full height
+        float y = bottom + i * yStep; // evenly spaced across full height
         Entity r = coordinator.createEntity();
-        coordinator.addComponent<Transform2D>(r, {glm::vec2(xLeft, y)});
+        coordinator.addComponent<Transform2D>(r, {glm::vec2(left, y)});
         coordinator.addComponent<Velocity2D>(r, {glm::vec2(c, 0.0f)}); // to the right at c
         Projectile p;
         p.impactParameter = std::fabs(y);
@@ -183,48 +179,24 @@ int main()
     while (!glfwWindowShouldClose(window))
     {
         glClear(GL_COLOR_BUFFER_BIT);
-        // 1) Desired aspect (keep constant)
-        const float desiredAspect = 4.0f / 3.0f; // or whatever you want to lock
 
-        // 2) Framebuffer size
-        int fbw, fbh;
-        glfwGetFramebufferSize(window, &fbw, &fbh);
-        float fbAspect = (fbh > 0) ? float(fbw) / float(fbh) : desiredAspect;
-
-        // 3) Compute centered viewport with desiredAspect
-        int vpX = 0, vpY = 0, vpW = fbw, vpH = fbh;
-        if (fbAspect > desiredAspect) {
-            // too wide → pillarbox left/right
-            vpW = int(fbh * desiredAspect + 0.5f);
-            vpX = (fbw - vpW) / 2;
-        } else if (fbAspect < desiredAspect) {
-            // too tall → letterbox top/bottom
-            vpH = int(fbw / desiredAspect + 0.5f);
-            vpY = (fbh - vpH) / 2;
-        }
-        glViewport(vpX, vpY, vpW, vpH);
-
-        // 4) Build worldTransform from the viewport aspect (which is fixed)
-        const float halfWorldX = ww;                 // keep horizontal meters fixed
-        const float halfWorldY = halfWorldX / desiredAspect;
-        const float sx = 1.0f / (2.0f * halfWorldX);
-        const float sy = 1.0f / (2.0f * halfWorldY);
-        glm::mat4 world = glm::scale(glm::mat4(1.0f), glm::vec3(sx, sy, 1.0f));
         sharedShader->use();
-        sharedShader->setTransform("worldTransform", world);
-
-
+        sharedShader->setTransform("projection", projection);
 
         if(!isPaused)
         {
-            lensSys->update(1.0f);
+            lensSys->update(1.5f);
         }
-        sphereSys->renderCircle(/*numPoints*/); // no per-system aspect scaling
+
+        // Render black hole
+        sphereSys->renderCircle(100); // 100 points pour un plus joli cercle
+
+        // Render trails
         trailSys->renderTrails();
+
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
-
     glfwTerminate();
     return 0;
 }

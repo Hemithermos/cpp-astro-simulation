@@ -12,23 +12,57 @@
 
 extern Coordinator coordinator;
 
-void RenderTrailSystem::init()
+void RenderTrailSystem::generateTrailPoints(std::vector<GLfloat>& pointList, std::vector<glm::vec3> trail, glm::vec3 pos, glm::vec4 color)
 {
+
+    pointList.push_back(pos.x);
+    pointList.push_back(pos.y);
+    pointList.push_back(pos.z);
+    pointList.push_back(color.x);
+    pointList.push_back(color.y);
+    pointList.push_back(color.z);
+    pointList.push_back(1.0f);
+
+    size_t lengthOfTrail = trail.size();
+    if(lengthOfTrail == 0) return;
+    for(size_t i = lengthOfTrail - 1 ; i > 0; i--)
+    {
+        pointList.push_back(trail[i].x);
+        pointList.push_back(trail[i].y);
+        pointList.push_back(trail[i].z);
+
+        pointList.push_back(color.x);
+        pointList.push_back(color.y);
+        pointList.push_back(color.z);
+        pointList.push_back((float) i / lengthOfTrail);
+    }
+
+}
+
+VAOinfo RenderTrailSystem::setUpTrailBuffers(const std::vector<GLfloat> &vertices)
+{
+    GLuint VAO, VBO;
+
     glGenVertexArrays(1, &VAO);
     glGenBuffers(1, &VBO);
 
     glBindVertexArray(VAO);
+
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(GLfloat), vertices.data(), GL_DYNAMIC_DRAW);
 
     // Interleaved attributes: position (vec3) then color (vec4)
     const GLsizei stride = (3 + 4) * sizeof(GLfloat);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void *)0);
+    // Position attribute (location = 0)
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (void *)(3 * sizeof(GLfloat)));
+    // Color attribute (location = 1)
+    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+    return VAOinfo{VAO, VBO};
 }
 
 void RenderTrailSystem::setShader(std::shared_ptr<Shader> s)
@@ -36,106 +70,33 @@ void RenderTrailSystem::setShader(std::shared_ptr<Shader> s)
     shader = s;
 }
 
-RenderTrailSystem::~RenderTrailSystem()
-{
-    // Only delete GL resources if an OpenGL context is still current.
-    // glfwGetCurrentContext() returns NULL after glfwTerminate(), calling
-    // GL functions without a context can cause a crash on program exit.
-    if (glfwGetCurrentContext()) {
-        if (VBO) glDeleteBuffers(1, &VBO);
-        if (VAO) glDeleteVertexArrays(1, &VAO);
-    }
-}
 
-void RenderTrailSystem::updateBuffers()
-{
-    vertexData.clear();
 
-    for (Entity e : listOfEntities) {
-        const Trail &trail = coordinator.getComponent<Trail>(e);
-        if (trail.trail.size() < 2) continue;
-
-        glm::vec4 baseCol = glm::vec4(1.0f);
-        if (coordinator.hasComponent<Color>(e)) {
-            baseCol = coordinator.getComponent<Color>(e).color;
-        }
-
-        size_t N = trail.trail.size();
-        // Build segments as pairs of vertices so we can draw with GL_LINES in one draw call
-        for (size_t i = 0; i < N - 1; ++i) {
-            // alpha fades from older (0.1) to newer (1.0)
-            float t = float(i) / float(std::max<size_t>(1, N - 1));
-            float alpha = 0.1f + 0.9f * t;
-
-            glm::vec4 col = baseCol;
-            col.a *= alpha;
-
-            // first point
-            vertexData.push_back(trail.trail[i].x);
-            vertexData.push_back(trail.trail[i].y);
-            vertexData.push_back(0.0f);
-            vertexData.push_back(col.r);
-            vertexData.push_back(col.g);
-            vertexData.push_back(col.b);
-            vertexData.push_back(col.a);
-
-            // second point
-            vertexData.push_back(trail.trail[i + 1].x);
-            vertexData.push_back(trail.trail[i + 1].y);
-            vertexData.push_back(0.0f);
-            vertexData.push_back(col.r);
-            vertexData.push_back(col.g);
-            vertexData.push_back(col.b);
-            vertexData.push_back(col.a);
-        }
-    }
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    if (!vertexData.empty()) {
-        glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(GLfloat), vertexData.data(), GL_DYNAMIC_DRAW);
-    } else {
-        // keep buffer small if no data
-        glBufferData(GL_ARRAY_BUFFER, 0, nullptr, GL_DYNAMIC_DRAW);
-    }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-}
 
 void RenderTrailSystem::renderTrails()
 {
-    if (!shader) return;
-
-    updateBuffers();
-
-    shader->use();
-
-    // Aspect correction same as RenderSpheresSystem
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);
-    float aspect = 1.0f;
-    if (viewport[3] != 0) aspect = (float)viewport[2] / (float)viewport[3];
-    glm::mat4 transform = glm::scale(glm::mat4(1.0f), glm::vec3(1.0f / aspect, 1.0f, 1.0f));
-    shader->setTransform("transform", transform);
-
-    if (vertexData.empty()) return;
-
-
-
-
-
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    for(Entity e : listOfEntities)
+    {
+        auto pos = coordinator.getComponent<Transform2D>(e).position;
+        auto trail = coordinator.getComponent<Trail>(e).trail;
+        glm::vec4 col = glm::vec4(1.0f, 1.0f, 0.0f, 1.0f);
+        if (coordinator.hasComponent<Color>(e)) {
+            col = coordinator.getComponent<Color>(e).color;
+        }
 
-    glBindVertexArray(VAO);
-    // Ensure the VBO is bound so attribute pointers read from the correct buffer
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glDrawArrays(GL_LINES, 0, static_cast<GLsizei>(vertexData.size() / 7));
-    // Check for GL errors to help debug bad draws
-    GLenum err = glGetError();
-    if (err != GL_NO_ERROR) {
-        std::cerr << "RenderTrailSystem: GL error after draw: 0x" << std::hex << err << std::dec << "\n";
+        std::vector<GLfloat> coords;
+        generateTrailPoints(coords, trail, glm::vec3(pos, 0.0f), col);
+        VAOinfo vaovbo = setUpTrailBuffers(coords);
+
+        shader->use();
+
+        glBindVertexArray(vaovbo.VAO);
+        glDrawArrays(GL_LINE_STRIP, 0, coords.size()/7);
+        glBindVertexArray(0);
+
+        glDeleteVertexArrays(1, &vaovbo.VAO);
+        glDeleteBuffers(1, &vaovbo.VBO);
     }
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    glDisable(GL_BLEND);
 }
